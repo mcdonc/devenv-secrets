@@ -50,11 +50,6 @@ class Config:
         if old is None:
             old = template
 
-        try:
-            old_deserialized = json.loads(old)
-        except Exception:
-            old_deserialized = {}
-
         with tempfile.NamedTemporaryFile(
                 suffix=".json", mode="w+", delete=False) as tf:
             temp_filename = tf.name
@@ -130,7 +125,9 @@ class Config:
     def switch(self, env):
         meta = json.loads(self.get_meta())
         if not env in meta["envs"]:
-            raise ValueError(f"no such env named {env}")
+            template = self.get_template()
+            self.save(env, template)
+            meta["envs"].append(env)
         meta["envs"].remove(env)
         meta["envs"].insert(0, env)
         meta = json.dumps(meta, indent=2)

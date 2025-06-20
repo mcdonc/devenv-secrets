@@ -7,6 +7,11 @@
       description = "Use secrets";
       default = true;
     };
+    env = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "Switch to this env at devenv startup";
+      default = null;
+    };
   };
   config =
     let
@@ -48,6 +53,14 @@
         };
 
         enterShell = lib.mkAfter ''
+
+          ${
+            if
+            (cfg.env != null)
+            then "secretsenv switch ${cfg.env} 2> /dev/null"
+            else ""
+          }
+
           eval "$(secretsenv export)" && \
           echo "secrets envvars set for $(secretsenv)" || \
           echo "Could not export secrets envvars"
