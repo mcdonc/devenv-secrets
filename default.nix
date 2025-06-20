@@ -10,7 +10,7 @@
   };
   config =
     let
-      cfg = config.secrets;
+      cfg = config.secretsenv;
       strToBool = str: str != "";
       boolToStr = bool: if bool then "true" else "false";
       # Separate python used by the devenv for keyring-related tasks.
@@ -42,7 +42,7 @@
       lib.mkIf cfg.enable {
         scripts.secretsenv.exec = ''
            exec ${keyringpyexe} "${./secretsenv.py}" $@'';
-        scripts.keyringpyexe.exec = keyringpyexe;
+        scripts.keyringpyexe-secretsenv.exec = keyringpyexe;
         env = {
           DEVENV_SECRETSENV_TEMPLATE = ./template.json;
         };

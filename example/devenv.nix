@@ -3,7 +3,7 @@
 {
   imports = [ devenv-secretsenv.plugin ];
 
-  awsenv.enable = true;
+  secretsenv.enable = true;
 
   env = {
     EDITOR = "emacs -nw";

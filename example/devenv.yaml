@@ -1,5 +1,5 @@
 inputs:
   nixpkgs:
     url: github:NixOS/nixpkgs/nixpkgs-unstable
-  devenv-awsenv:
+  devenv-secretsenv:
     url: path:/home/chrism/projects/devenv-secretsenv
