@@ -1,5 +1,5 @@
 {
-  description = "devenv-awsenv";
+  description = "devenv-secrets";
 
   inputs = {};
 

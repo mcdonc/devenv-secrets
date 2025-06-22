@@ -1,10 +1,10 @@
-{ pkgs, lib, config, inputs, devenv-secretsenv, ... }:
+{ pkgs, lib, config, inputs, devenv-secrets, ... }:
 
 {
-  imports = [ devenv-secretsenv.plugin ];
+  imports = [ devenv-secrets.plugin ];
 
-  secretsenv.enable = true;
-  secretsenv.env = "example";
+  secrets.enable = true;
+  secrets.profile = "example";
 
   env = {
     EDITOR = "emacs -nw";
