@@ -71,7 +71,7 @@ named ``another`` via:
    secrets copy dev another
 
 Then exit the devenv shell and change ``secrets.profile = "dev";`` to
-``secrets.profile = "another";``.  
+``secrets.profile = "another";`` in order to select the new secrets profile.  
 
 Note that secrets profiles are not local to a specific devenv environmnent or
 directory or anything, they are shared by all devenv environments that you use
