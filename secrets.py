@@ -124,10 +124,10 @@ class Config:
         profiles = meta["profiles"]
         if name == self.current_profile:
             self.errout("Cannot delete current profile")
-            sys.exit(1)
+            return 1
         if not name in profiles:
             self.errout(f"No such profile {name}")
-            sys.exit(1)
+            return 1
         profiles.remove(name)
         meta = json.dumps(meta)
         self.set_password("__meta__", meta)
@@ -138,11 +138,11 @@ class Config:
         profiles = meta["profiles"]
         if not src in profiles:
             self.errout(f"No such profile {src}")
-            sys.exit(1)
+            return 1
         current = self.current_profile
         if target == current:
             self.errout(f"Cannot copy on top of current profile {target}")
-            sys.exit(1)
+            return 1
         copied = self.get_password(src)
         if not target in profiles:
             profiles.append(target)
@@ -162,13 +162,13 @@ class Config:
             self.out(f"{k}={quoted}")
             self.out(f"export {k}")
 
-    def call(self, cmd):
+    def call(self, cmd): # pragma: no cover
         return subprocess.call(cmd)
 
-    def out(self, data):
+    def out(self, data): # pragma: no cover
         print(data)
 
-    def errout(self, data):
+    def errout(self, data): # pragma: no cover
         sys.stderr.write(data + "\n")
         sys.stderr.flush()
 
@@ -217,22 +217,27 @@ if __name__ == "__main__": # pragma: no cover
     except ImportError:
         keyring = None # for tests
 
+    def exit(returncode):
+        if returncode is None:
+            returncode = 0
+        sys.exit(returncode)
+
     config = Config(profile, keyring)
 
     if not args.command:
         config.out(config.current_profile)
 
     if args.command == "edit":
-        config.edit()
+        exit(config.edit())
 
     if args.command == "list":
-        config.list()
+        exit(config.list())
 
     if args.command == "delete":
-        config.delete(args.name)
+        exit(config.delete(args.name))
 
     if args.command == "copy":
-        config.copy(args.source, args.target)
+        exit(config.copy(args.source, args.target))
 
     if args.command == "export":
-        config.export()
+        exit(config.export())

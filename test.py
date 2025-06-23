@@ -29,6 +29,9 @@ class FakeKeyring:
         else:
             self.profiles[key] = serialized
 
+    def delete_password(self, ourname, key):
+        self.profiles.pop(key, None)
+
 class TestConfig(unittest.TestCase):
     def __init__(self, name):
         super().__init__(name)
@@ -119,6 +122,72 @@ class TestConfig(unittest.TestCase):
         result = config.load("profile", 123)
         self.assertEqual(result, 123)
 
+    def test_copy_no_such_profile(self):
+        config = self._makeOne("profile")
+        capture = []
+        config.errout = capture.append
+        config.copy("wontexist", "another")
+        self.assertEqual(capture[0], "No such profile wontexist")
+
+    def test_copy_atop_current(self):
+        config = self._makeOne("profile")
+        capture = []
+        config.errout = capture.append
+        config.copy("profile", "profile")
+        self.assertEqual(
+            capture[0],
+            "Cannot copy on top of current profile profile"
+        )
+
+    def test_copy_success(self):
+        config = self._makeOne("profile")
+        config.copy("profile", "another")
+        self.assertEqual(
+            config.keyring.profiles["profile"],
+            config.keyring.profiles["another"]
+        )
+
+    def test_delete_current(self):
+        config = self._makeOne("profile")
+        capture = []
+        config.errout = capture.append
+        config.delete("profile")
+        self.assertEqual(capture[0], "Cannot delete current profile")
+
+    def test_delete_nousuch(self):
+        config = self._makeOne("profile")
+        capture = []
+        config.errout = capture.append
+        config.delete("nope")
+        self.assertEqual(capture[0], "No such profile nope")
+
+    def test_delete_works(self):
+        config = self._makeOne("profile")
+        config.keyring.profiles["another"] = "{}"
+        meta = json.loads(config.keyring.meta)
+        meta["profiles"] = ["profile", "another"]
+        config.keyring.meta = json.dumps(meta)
+        capture = []
+        config.errout = capture.append
+        config.delete("another")
+        self.assertFalse(capture)
+        self.assertEqual(list(config.keyring.profiles.keys()), ["profile"])
+        self.assertEqual(
+            json.loads(config.keyring.meta),
+            {"profiles": ["profile"]}
+        )
+
+    def test_list(self):
+        config = self._makeOne("profile")
+        config.keyring.profiles["another"] = "{}"
+        meta = json.loads(config.keyring.meta)
+        meta["profiles"] = ["profile", "another"]
+        config.keyring.meta = json.dumps(meta)
+        capture = []
+        config.out = capture.append
+        config.list()
+        self.assertEqual(capture, ['another', 'profile *'])
+
     def test_export(self):
         config = self._makeOne("profile")
         capture = []
@@ -134,6 +203,11 @@ class TestConfig(unittest.TestCase):
             "export MYSECRET2"
         ])
         self.assertEqual(actual, expected)
+
+    def test_initialize_missing(self):
+        config = self._makeOne("profile")
+        config.initialize_missing("another")
+        self.assertEqual(config.get_password("another"), config.get_template())
 
 
 if __name__ == '__main__':
