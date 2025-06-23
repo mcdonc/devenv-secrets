@@ -5,6 +5,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
+import traceback
 
 OURNAME = "devenv-secrets"
 
@@ -12,14 +13,10 @@ class Config:
     def __init__(self, profile, keyring=None):
         self.keyring = keyring
         if profile is None:
-            profile = self.get_default_profile()
+            profile = "dev"
         self.current_profile = profile
-        self.get_meta() # initialize missing
-        profiledata = self.load(self.current_profile)
-        if profiledata is None:
-            template = self.get_template()
-            self.save(self.current_profile, template)
-            profiledata = self.load(self.current_profile)
+        self.initialize_missing(profile)
+        profiledata = self.load(profile)
         self.profiledata = profiledata
 
     def get_password(self, key, default=None):
@@ -28,26 +25,20 @@ class Config:
         except self.keyring.errors.InitError:
             return default
 
-    def set_password(self, profile, serialized):
-        self.keyring.set_password(OURNAME, profile, serialized)
+    def set_password(self, key, serialized):
+        self.keyring.set_password(OURNAME, key, serialized)
 
     def get_template(self):
         path = os.environ["DEVENV_SECRETS_TEMPLATE"]
         with open(path) as f:
             return f.read()
 
-    def edit(self, profile):
-        if profile is None:
-            profile = self.current_profile
+    def edit(self):
+        profile = self.current_profile
 
         editor = os.environ.get('EDITOR', 'nano')
 
         old = self.get_password(profile)
-
-        template = self.get_template()
-
-        if old is None:
-            old = template
 
         with tempfile.NamedTemporaryFile(
                 suffix=".json", mode="w+", delete=False) as tf:
@@ -58,36 +49,29 @@ class Config:
         try:
             cmd = shlex.split(editor)
             cmd.append(temp_filename)
-            subprocess.call(cmd)
+            self.call(cmd)
             with open(temp_filename) as f:
                 new = f.read()
                 try:
                     json.loads(new)
                 except Exception:
                     self.save(profile, new)
-                    import traceback; traceback.print_exc()
+                    exc = traceback.format_exc()
+                    self.errout(exc)
                     self.errout("Could not deserialize new data, re-edit")
                 else:
                     self.save(profile, new)
-                    if profile == self.current_profile:
-                        newprofile = None
-                    else:
-                        newprofile = profile
-                    self.show_activate_changes_tip(newprofile)
+                    changed = new != old
+                    if changed:
+                        self.show_activate_changes_tip()
         finally:
             os.unlink(temp_filename)
 
-    def show_activate_changes_tip(self, newprofile=None):
-        if newprofile:
-            newprofile = f"  secrets switch {newprofile} && "
-        else:
-            newprofile = "  "
+    def show_activate_changes_tip(self):
         self.errout(
-            "To activate your changes, run:\n"
-            f"\n{newprofile}"
-            'eval "$(secrets export)"\n'
-            "\n"
-            "Or exit and reenter the devenv shell\n"
+            "To activate your changes, run:\n\n"
+            '  eval "$(secrets export)"\n\n'
+            "Or exit and reenter the devenv shell"
         )
 
     def save(self, profile, serialized):
@@ -100,11 +84,22 @@ class Config:
         except (json.decoder.JSONDecodeError, TypeError):
             return default
 
+    def initialize_missing(self, profile):
+        meta_str = self.get_password("__meta__")
+        if meta_str is None:
+            meta_str = json.dumps({"profiles": [self.current_profile]})
+        meta = json.loads(meta_str)
+        if not profile in meta["profiles"]:
+            meta["profiles"].append(profile)
+        meta_str = json.dumps(meta, indent=4)
+        self.set_password("__meta__", meta_str)
+        profile_str = self.get_password(profile, None)
+        if profile_str is None:
+            template = self.get_template()
+            self.save(profile, template)
+
     def get_meta(self):
         meta = self.get_password("__meta__")
-        if meta is None:
-            meta = json.dumps({"profiles": [self.current_profile]}, indent=4)
-            self.set_password("__meta__", meta)
         return meta
 
     def load_meta(self):
@@ -115,42 +110,23 @@ class Config:
         serialized = json.dumps(data, indent=4, sort_keys=True)
         return serialized
 
-    def get_default_profile(self):
-        meta = json.loads(self.get_meta())
-        return meta["profiles"][0]
-
-    def switch(self, profile):
-        meta = json.loads(self.get_meta())
-        if not profile in meta["profiles"]:
-            template = self.get_template()
-            self.save(profile, template)
-            meta["profiles"].append(profile)
-        meta["profiles"].remove(profile)
-        meta["profiles"].insert(0, profile)
-        meta = json.dumps(meta, indent=2)
-        self.set_password("__meta__", meta)
-        self.show_activate_changes_tip()
-
     def list(self):
         meta = self.load_meta()
         profiles = meta["profiles"]
-        current = profiles[0]
         for profile in sorted(profiles):
-            self.out(profile)
-            if profile == current:
-                self.out("*")
+            if profile == self.current_profile:
+                self.out(f"{profile} *")
             else:
-                self.out("")
+                self.out(profile)
 
     def delete(self, name):
         meta = self.load_meta()
         profiles = meta["profiles"]
-        current = profiles[0]
-        if name == current:
-            self.out("Cannot delete current profile")
+        if name == self.current_profile:
+            self.errout("Cannot delete current profile")
             sys.exit(1)
         if not name in profiles:
-            self.out(f"No such profile {name}")
+            self.errout(f"No such profile {name}")
             sys.exit(1)
         profiles.remove(name)
         meta = json.dumps(meta)
@@ -161,11 +137,11 @@ class Config:
         meta = self.load_meta()
         profiles = meta["profiles"]
         if not src in profiles:
-            self.out(f"No such profile {src}")
+            self.errout(f"No such profile {src}")
             sys.exit(1)
-        current = profiles[0]
+        current = self.current_profile
         if target == current:
-            self.out(f"Cannot copy on top of current profile {target}")
+            self.errout(f"Cannot copy on top of current profile {target}")
             sys.exit(1)
         copied = self.get_password(src)
         if not target in profiles:
@@ -186,40 +162,27 @@ class Config:
             self.out(f"{k}={quoted}")
             self.out(f"export {k}")
 
-    def run(self, cmd, **kw):
-        return subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            **kw
-        )
+    def call(self, cmd):
+        return subprocess.call(cmd)
 
     def out(self, data):
         print(data)
 
     def errout(self, data):
-        sys.stderr.write(data)
+        sys.stderr.write(data + "\n")
         sys.stderr.flush()
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
+    profile = os.environ.get("DEVENV_SECRETS_PROFILE")
+
     main_parser = argparse.ArgumentParser(description="secrets")
     subparsers= main_parser.add_subparsers(
         dest="command",
         required=False,
-        help="No arguments means show current default profile"
+        help="No arguments means show current profile"
     )
     edit_parser = subparsers.add_parser(
-        "edit", help="Edit a profile"
-    )
-    edit_parser.add_argument(
-        "name", help="The profile name to edit", default=None, nargs="?"
-    )
-
-    switch_parser = subparsers.add_parser(
-        "switch", help="Make a  profile the default"
-    )
-    switch_parser.add_argument(
-        "name", help="The profile name to make the default profile"
+        "edit", help="Edit the current secrets profile"
     )
 
     list_parser = subparsers.add_parser(
@@ -249,8 +212,6 @@ if __name__ == "__main__":
 
     args = main_parser.parse_args()
 
-    profile = os.environ.get("DEVENV_SECRETS_PROFILE")
-
     try:
         import keyring
     except ImportError:
@@ -262,10 +223,7 @@ if __name__ == "__main__":
         config.out(config.current_profile)
 
     if args.command == "edit":
-        config.edit(args.name)
-
-    if args.command == "switch":
-        config.switch(args.name)
+        config.edit()
 
     if args.command == "list":
         config.list()

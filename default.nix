@@ -16,8 +16,6 @@
   config =
     let
       cfg = config.secrets;
-      strToBool = str: str != "";
-      boolToStr = bool: if bool then "true" else "false";
       # Separate python used by the devenv for keyring-related tasks.
       # Rationale: on Mac, when any of this stuff changes, its Nix store path
       # will change, and the Mac will ask for confirmation to allow the "new"
@@ -36,33 +34,35 @@
       secrets_python = (
         pkgs.python311.withPackages (python-pkgs: [
           python-pkgs.keyring
-          python-pkgs.pyotp
+          python-pkgs.coverage
         ] ++ lib.optionals pkgs.stdenv.isLinux [
           python-pkgs.dbus-python
           python-pkgs.secretstorage
         ]
         )
       );
-      secretspyexe = "${secrets_python}/bin/python";
+      secretspyexe = lib.getExe secrets_python;
     in
       lib.mkIf cfg.enable {
         scripts.secrets.exec = ''
-           exec ${secretspyexe} "${./secrets.py}" $@'';
-        scripts.secretspyexe.exec = secretspyexe;
+          exec ${secretspyexe} "${./secrets.py}" "$@"
+        '';
+        scripts.secretspyexe.exec = ''
+          exec ${secretspyexe} "$@"
+        '';
+        scripts.testsecrets.exec = ''
+         ${secretspyexe} -m coverage run ../test.py
+         ${secretspyexe} -m coverage report -m --include="test.py,secrets.py"
+        '';
         env = {
           DEVENV_SECRETS_TEMPLATE = ./template.json;
+          DEVENV_SECRETS_PROFILE = cfg.profile;
         };
 
-        enterShell = lib.mkAfter ''
-          ${
-            if
-            (cfg.profile != null)
-            then "export DEVENV_SECRETS_PROFILE=" + cfg.profile
-            else ""
-          }
-          eval "$(secrets export 2> /dev/null)" && \
-          echo "secrets envvars set for $(secrets)" || \
-          echo "Could not export secrets envvars"
-        '';
+        # enterShell = lib.mkBefore ''
+        #   eval "$(secrets export 2> /dev/null)" && \
+        #   echo "🗝️  Secrets envvars set for $(secrets)" || \
+        #   echo "✖️  Could not export secrets envvars"
+        # '';
       };
 }
