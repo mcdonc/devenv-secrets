@@ -2,4 +2,4 @@ inputs:
   nixpkgs:
     url: github:NixOS/nixpkgs/nixpkgs-unstable
   devenv-secrets:
-    url: path:/home/chrism/projects/devenv-secrets
+    url: github:mcdonc/devenv-secrets

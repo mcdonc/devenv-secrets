@@ -13,5 +13,6 @@ jobs:
       - run: |
           nix profile install --accept-flake-config github:cachix/devenv
           export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+          devenv update
           devenv test
           

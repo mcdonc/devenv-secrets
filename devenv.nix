@@ -1,7 +1,7 @@
 { ... }:
 
 {
-  imports = [ ./. ];
+  imports = [ ./default.nix ];
 
   secrets.enable = true;
   secrets.profile = "testenv";

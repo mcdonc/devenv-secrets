@@ -6,8 +6,8 @@
   secrets.enable = true;
   secrets.profile = "example";
 
-  env = {
-    EDITOR = "emacs -nw";
-  };
+  enterShell = ''
+    echo "We are using the $(secrets) profile."
+  '';
 
 }

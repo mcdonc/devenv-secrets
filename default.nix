@@ -55,7 +55,7 @@
           DEVENV_SECRETS_PROFILE = cfg.profile;
         };
 
-        enterShell = lib.mkAfter ''
+        enterShell = lib.mkBefore ''
           eval "$(secrets export 2> /dev/null)" && \
           echo "🗝️  Secrets envvars set for $(secrets)" || \
           echo "✖️  Could not export secrets envvars"
