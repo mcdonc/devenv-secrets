@@ -12,6 +12,8 @@
 
   enterTest = ''
     secretspyexe -m coverage run "$DEVENV_ROOT/test.py"
-    secretspyexe -m coverage report -m --include="test.py,secrets.py"
+    secretspyexe -m coverage report -m \
+      --fail-under=100 \
+      --include="test.py,secrets.py"
   '';
 }
