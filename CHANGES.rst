@@ -1,6 +1,13 @@
 Changes
 =======
 
+Next release
+------------
+
+- Use Python 3.13 rather than 3.11.
+
+- Run tests on MacOS too.
+
 v0.2 (Jun 24, 2025)
 -------------------
 
