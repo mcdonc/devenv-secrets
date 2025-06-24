@@ -27,7 +27,7 @@ To enable ``devenv-secrets`` within a devenv project, you must add its URL to
    inputs:
      nixpkgs:
        url: github:NixOS/nixpkgs/nixpkgs-unstable
-     devenv-awsenv:
+     devenv-secrets:
        url: github:mcdonc/devenv-secrets
 
 Then you have to include its plugin and enable it within ``devenv.nix``.  For
