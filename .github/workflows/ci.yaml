@@ -15,6 +15,6 @@ jobs:
       - uses: cachix/install-nix-action@v31.4.1
       - run: |
           nix profile install --accept-flake-config github:cachix/devenv
-          export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+          export PYTHON_KEYRING_BACKEND=keyrings.alt.file.PlaintextKeyring
           devenv update
           devenv test

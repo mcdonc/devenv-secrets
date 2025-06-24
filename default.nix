@@ -34,6 +34,7 @@
       secrets_python = (
         pkgs.python313.withPackages (python-pkgs: [
           python-pkgs.keyring
+          python-pkgs.keyrings-alt
           python-pkgs.coverage
         ] ++ lib.optionals pkgs.stdenv.isLinux [
           python-pkgs.dbus-python
