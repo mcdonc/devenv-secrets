@@ -17,8 +17,9 @@ the secrets are placed into environment variables for the duration of the
 shell.
 
 It will work on most Linux systems that have a desktop environment and on
-MacOS.  It will not work on headless systems, so cannot be used in CI
-deployments.
+MacOS.  It will not work on headless systems without using an alternate keyring
+implementation (e.g. unless you set ``PYTHON_KEYRING_BACKEND`` to an
+appropriately secure implementation that works in your CI environment).
 
 Setting It Up
 -------------

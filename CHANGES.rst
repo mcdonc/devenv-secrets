@@ -8,6 +8,8 @@ Next release
 
 - Run tests on MacOS too.
 
+- Use PlaintextKeyring during GH functional tests for end-to-end testing.
+
 v0.2 (Jun 24, 2025)
 -------------------
 
