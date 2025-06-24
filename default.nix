@@ -32,7 +32,7 @@
       # of a python-3.12 one in Nix.
       #
       secrets_python = (
-        pkgs.python311.withPackages (python-pkgs: [
+        pkgs.python313.withPackages (python-pkgs: [
           python-pkgs.keyring
           python-pkgs.coverage
         ] ++ lib.optionals pkgs.stdenv.isLinux [
