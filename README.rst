@@ -2,6 +2,10 @@
  ``devenv-secrets``: A tool to keep local secrets
 =================================================
 
+.. image:: https://github.com/mcdonc/devenv-secrets/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/mcdonc/devenv-secrets/actions/workflows/ci.yml
+   :alt: CI Status
+         
 Overview
 --------
 
