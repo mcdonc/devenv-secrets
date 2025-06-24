@@ -1,11 +1,6 @@
 name: Unit tests
 
-on:
-  push:
-    branches:
-      # we can only test the main branch until i can figure out
-      # how to not use the GitHub URL in devenv.nix
-      - main
+on: push
 
 jobs:
   unittests:

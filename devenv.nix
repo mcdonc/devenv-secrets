@@ -1,7 +1,7 @@
-{ pkgs, lib, config, inputs, devenv-secrets, ... }:
+{ ... }:
 
 {
-  imports = [ devenv-secrets.plugin ];
+  imports = [ ./. ];
 
   secrets.enable = true;
   secrets.profile = "testenv";
