@@ -50,10 +50,6 @@
         scripts.secretspyexe.exec = ''
           exec ${secretspyexe} "$@"
         '';
-        scripts.testsecrets.exec = ''
-         ${secretspyexe} -m coverage run ../test.py
-         ${secretspyexe} -m coverage report -m --include="test.py,secrets.py"
-        '';
         env = {
           DEVENV_SECRETS_TEMPLATE = ./template.json;
           DEVENV_SECRETS_PROFILE = cfg.profile;

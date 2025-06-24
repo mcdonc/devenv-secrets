@@ -1,0 +1,14 @@
+name: Unit tests
+
+on: push
+
+jobs:
+  unittests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4      
+      - uses: DeterminateSystems/determinate-nix-action@main
+      - run: |
+          nix install --accept-flake-config github:cachix/devenv
+          devenv test
+          
