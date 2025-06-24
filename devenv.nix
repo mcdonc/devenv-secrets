@@ -7,7 +7,7 @@
   secrets.profile = "testenv";
 
   enterShell = ''
-    [ "$(secrets)" == "testenv" ] || exit 2
+    [ "$(secrets)" == "testenv" ] && echo "enterShell works" || exit 2
   '';
 
   enterTest = ''
