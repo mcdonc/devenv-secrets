@@ -9,6 +9,6 @@ jobs:
       - uses: actions/checkout@v4      
       - uses: DeterminateSystems/determinate-nix-action@main
       - run: |
-          nix install --accept-flake-config github:cachix/devenv
+          nix profile install --accept-flake-config github:cachix/devenv
           devenv test
           
