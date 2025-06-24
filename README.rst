@@ -16,11 +16,10 @@ wallet (using the Python ``keyring`` module).  When ``devenv shell`` is run,
 the secrets are placed into environment variables for the duration of the
 shell.
 
-It will work without configuration on most Linux systems that have a desktop
-environment and on MacOS.  It will not work on headless systems without using
-an alternate keyring implementation (e.g. unless you set
-``PYTHON_KEYRING_BACKEND`` to an appropriately secure implementation that works
-in your CI environment).
+It will work without backend configuration on most Linux systems that have a
+desktop environment and on MacOS.  It will not work on headless systems unless
+you set ``PYTHON_KEYRING_BACKEND`` to an appropriately secure implementation
+that works in your CI environment.
 
 Setting It Up
 -------------
