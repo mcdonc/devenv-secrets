@@ -1,8 +1,8 @@
 Changes
 =======
 
-Next release
-------------
+v0.3 (Jun 24, 2025)
+-------------------
 
 - Use Python 3.13 rather than 3.11.
 
